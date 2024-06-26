@@ -29,7 +29,7 @@ export class UserService {
     });
   }
 
-  async findOne(username: String): Promise<Partial<User>> {
+  async findOne(username: string): Promise<Partial<User>> {
     const user = await this.userRepository
       .createQueryBuilder()
       .addSelect("User.password")
