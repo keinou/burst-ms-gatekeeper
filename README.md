@@ -29,6 +29,13 @@ You must configure the following environment variables:
 - `JWT_SECRET`: A secret key used to encrypt jwt tokens.
 - `JWT_EXPIRES`: expressed in seconds or a string describing a time span zeit/ms. Eg: 60, "2 days", "10h", "7d". Default is 2h.
 
+- `SMTP_HOST`: The host of your smtp server.
+- `SMTP_PORT`: The port of your smtp server.
+- `SMTP_IGNORE_SSL`: If true, a secure connection is not required for SMTPS. Default is false.
+- `SMTP_SECURE`: If true, the connection uses the STARTTLS command after connecting to the server. Default is true.
+- `SMTP_USER`: The user to connect with in your smtp server.
+- `SMTP_PASSWORD`: The password for the user above.
+
 ## Installation
 
 ```bash
@@ -44,3 +51,9 @@ yarn start
 ## Testing
 
 In this moment we dont have tests, but we are working on and will soon.
+
+### Roadmap
+
+- [x] Password reset
+- [ ] Unit tests
+- [ ] OpenApi documentation with swagger

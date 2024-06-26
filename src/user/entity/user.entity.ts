@@ -1,7 +1,7 @@
 import { hash } from "bcrypt";
 import { IsEmail, Min } from "class-validator";
 import { Role } from "src/enums/role.enum";
-import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { UserInterface } from "../interface/user.interface";
 
 @Entity()
@@ -32,7 +32,9 @@ export class User implements UserInterface {
   role: Role;
 
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword() {
     this.password = await hash(this.password, 10);
   }
+
 }

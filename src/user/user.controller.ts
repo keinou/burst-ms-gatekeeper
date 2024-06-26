@@ -1,4 +1,4 @@
-import { Controller, Get, ParseIntPipe, Query, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/role.enum';
@@ -25,6 +25,22 @@ export class UserController {
     @Query('page', ParseIntPipe) page = 1,
     @Query('pageSize') pageSize = 10) {
     return this.userService.findAll(page, pageSize);
+  }
+
+  @Post()
+  create(@Body() user: Partial<User>) {
+    return this.userService.create(user);
+  }
+
+  @Patch()
+  @UseGuards(AuthGuard)
+  passwordReset(@Request() req, @Body() user: Partial<User>) {
+    return this.userService.resetPassword(req.user.id, user);
+  }
+
+  @Patch("forgot-pasword/:emailOrUsername")
+  passwordForgot(@Param('emailOrUsername') emailOrUsername: string) {
+    return this.userService.passwordForgot(emailOrUsername);
   }
 
   @UseGuards(AuthGuard)
