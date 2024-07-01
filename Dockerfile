@@ -24,14 +24,7 @@ USER node
 
 FROM node:20.11-alpine as production
 
-WORKDIR "/app"
-
-RUN apt-get update
-ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=America/Sao_Paulo
-RUN apt-get install -y tzdata
-
-RUN apt-get clean && apt-get autoclean && apt-get autoremove -y
+WORKDIR /app
 
 COPY --chown=node:node --from=build /usr/src/app/package.json           ./package.json
 COPY --chown=node:node --from=build /usr/src/app/package-lock.json      ./package-lock.json
