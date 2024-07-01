@@ -22,7 +22,7 @@ RUN npm ci --only=production && npm cache clean --force
 
 USER node
 
-FROM node:20-bullseye as production
+FROM node:20.11-alpine as production
 
 WORKDIR "/app"
 
