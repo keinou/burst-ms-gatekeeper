@@ -8,7 +8,7 @@ export class CreateUserDto {
   @ApiProperty({ example: 'super-user@gmail.com' })
   email: string;
 
-  @ApiProperty({ example: 'admin', enum: Role })
+  @ApiProperty({ example: 'admin', enum: Role, required: false })
   role: Role;
 
   @ApiProperty({ example: 'super-pass' })
