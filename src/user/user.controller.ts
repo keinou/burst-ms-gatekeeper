@@ -1,4 +1,4 @@
-import { Body, Controller, Get, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, ParseIntPipe, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Paginated } from 'src/decorators/pagineted.decorator';
@@ -42,4 +42,12 @@ export class UserController {
     return this.userService.create(user);
   }
 
+  @UseGuards(AuthGuard)
+  @Get('me')
+  @ApiOperation({ summary: 'Get my profile' })
+  @ApiResponse({ status: 200, description: 'Success.', type: User })
+  @ApiResponse({ status: 401 })
+  async me(@Request() req): Promise<User | string> {
+    return req.user;
+  }
 }
