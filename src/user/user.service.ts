@@ -2,6 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import generator from 'generate-password-ts';
+import { ForgotPasswordDto } from 'src/auth/dto/forgot-password.dto';
 import { PaginetedResponse } from 'src/utils/model/paginated.response.model';
 import { ObjectLiteral, QueryFailedError, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
@@ -86,12 +87,12 @@ export class UserService {
     }
   }
 
-  async passwordForgot(email: string): Promise<Partial<User>> {
+  async forgotPassword(dto: ForgotPasswordDto): Promise<Partial<User>> {
     try {
       const user = await this.userRepository.findOne(
         {
           where: [
-            { email: email }
+            { email: dto.email }
           ]
         }
       );
