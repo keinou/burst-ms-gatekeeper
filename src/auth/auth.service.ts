@@ -13,16 +13,16 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService) { }
 
-  async validateUser(username: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<any> {
     try {
-      const user$ = await this.client.send({ role: 'user', cmd: 'get' }, { username })
+      const user$ = await this.client.send({ role: 'user', cmd: 'get' }, { email })
         .pipe(
           timeout(5000),
           catchError(err => {
             if (err instanceof TimeoutError) {
               throw new RequestTimeoutException();
             }
-            throw new err;
+            throw err;
           }));
       const user = await firstValueFrom(user$);
 

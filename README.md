@@ -19,6 +19,7 @@ You must configure the following environment variables:
 
 - `POST`: The port where the server will listen
 - `TCP_PORT`: The port where the tcp server will listen (used to microsservices communication)
+- `LOG_LEVEL`: The log level, you can use `log`, `error`, `warn`, `debug`, `verbose`. Default is `log,error,warn`
 
 - `DB_HOST`: The host of your database.
 - `DB_PORT`: The port of your database.

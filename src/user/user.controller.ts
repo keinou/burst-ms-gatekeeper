@@ -15,7 +15,7 @@ export class UserController {
 
   @MessagePattern({ role: 'user', cmd: 'get' })
   getUser(data: any): Promise<Partial<User>> {
-    return this.userService.findOne(data.username);
+    return this.userService.findOne(data.email);
   }
 
   @Get()
@@ -38,9 +38,9 @@ export class UserController {
     return this.userService.resetPassword(req.user.id, user);
   }
 
-  @Patch("forgot-pasword/:emailOrUsername")
-  passwordForgot(@Param('emailOrUsername') emailOrUsername: string) {
-    return this.userService.passwordForgot(emailOrUsername);
+  @Patch("forgot-pasword/:email")
+  passwordForgot(@Param('email') email: string) {
+    return this.userService.passwordForgot(email);
   }
 
   @UseGuards(AuthGuard)

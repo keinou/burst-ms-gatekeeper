@@ -49,7 +49,9 @@ import { UserModule } from './user/user.module';
       }),
       inject: [ConfigService]
     }),
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     AuthModule,
     UserModule
   ],

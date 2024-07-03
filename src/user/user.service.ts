@@ -2,7 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import generator from 'generate-password-ts';
-import { PaginetedResponse } from 'src/util/model/paginated.response.model';
+import { PaginetedResponse } from 'src/utils/model/paginated.response.model';
 import { ObjectLiteral, QueryFailedError, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 
@@ -32,11 +32,11 @@ export class UserService {
     });
   }
 
-  async findOne(username: string): Promise<Partial<User>> {
+  async findOne(email: string): Promise<Partial<User>> {
     const user = await this.userRepository
       .createQueryBuilder()
       .addSelect("User.password")
-      .where("User.username = :username", { username })
+      .where("User.email = :email", { email })
       .getOne()
 
     return user;
@@ -47,13 +47,12 @@ export class UserService {
       const existingUser = await this.userRepository.findOne(
         {
           where: [
-            { username: user.username },
             { email: user.email }
           ]
         }
       );
       if (existingUser) {
-        throw new ConflictException('Username/Email already exists');
+        throw new ConflictException('Email already exists');
       }
 
       const userEntity = this.userRepository.create(user);
@@ -62,9 +61,6 @@ export class UserService {
       return res.generatedMaps[0];
     } catch (e) {
       if (e instanceof QueryFailedError) {
-        if (e.message.includes('duplicate key value violates unique constraint "username"')) {
-          throw new ConflictException('Username already exists');
-        }
         if (e.message.includes('duplicate key value violates unique constraint "email"')) {
           throw new ConflictException('Email already exists');
         }
@@ -90,13 +86,12 @@ export class UserService {
     }
   }
 
-  async passwordForgot(usernameOrEmail: string): Promise<Partial<User>> {
+  async passwordForgot(email: string): Promise<Partial<User>> {
     try {
       const user = await this.userRepository.findOne(
         {
           where: [
-            { username: usernameOrEmail },
-            { email: usernameOrEmail }
+            { email: email }
           ]
         }
       );

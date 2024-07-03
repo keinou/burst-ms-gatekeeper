@@ -1,8 +1,9 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { LogLevel, Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './app.module';
+import { LoggerMiddleware } from './middlewares/logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,27 +11,10 @@ async function bootstrap() {
   const port = config.get<number>('PORT', 3000);
   const tcpPort = config.get<number>('TCP_PORT', 4000);
 
-  const logger = new Logger('requests');
-  app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-      const { method, url, ip } = req;
-      const { statusCode } = res;
-      const duration = Date.now() - start;
+  const logLevel = config.get<string>('LOG_LEVEL', 'log');
+  Logger.overrideLogger(getLogLevels(logLevel));
 
-      if (statusCode >= 400 && statusCode < 500) {
-        logger.warn(`[${method}] ${url} {${statusCode}} ${duration}ms [${ip}]`);
-      } else if (statusCode >= 500) {
-        logger.error(
-          `[${method}] ${url} {${statusCode}} ${duration}ms [${ip}]`,
-        );
-      } else {
-        logger.log(`[${method}] ${url} {${statusCode}} ${duration}ms [${ip}]`);
-      }
-    });
-    next();
-  });
-
+  app.use(new LoggerMiddleware().use);
   app.connectMicroservice<MicroserviceOptions>(
     {
       transport: Transport.TCP,
@@ -45,4 +29,14 @@ async function bootstrap() {
   await app.startAllMicroservices();
   await app.listen(port);
 }
+
+function getLogLevels(level: string): (LogLevel)[] {
+  const levels = ['log', 'error', 'warn', 'debug', 'verbose'];
+  const levelIndex = levels.indexOf(level);
+  if (levelIndex === -1) {
+    return ['log', 'error', 'warn'];
+  }
+  return levels.slice(0, levelIndex + 1) as (LogLevel)[];
+}
+
 bootstrap();
