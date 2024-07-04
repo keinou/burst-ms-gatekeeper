@@ -22,7 +22,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Login' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 201, description: 'Login successful', type: JwtResponseDto })
-  @UseGuards(AuthGuard)
   async login(@Request() req) {
     return this.authService.login(req.user);
   }
