@@ -46,8 +46,11 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @ApiOperation({ summary: 'Refresh token for a session' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
   @UseGuards(AuthGuard('jwt-refresh'))
-  async refreshToken(@Request() req ): Promise<any> {
+  async refreshToken(@Request() req): Promise<any> {
     return this.authService.refreshToken(req.user.sessionId, req.user);
   }
 
