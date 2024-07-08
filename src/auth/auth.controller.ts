@@ -1,7 +1,8 @@
 import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from 'src/guards/auth.guard';
+import { AuthGuard as CustomGuard } from 'src/guards/auth.guard';
 import { LocalAuthGuard } from 'src/guards/local-auth.guard';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
@@ -39,9 +40,15 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
   @ApiResponse({ status: 400, description: 'Invalid token or password' })
-  @UseGuards(AuthGuard)
+  @UseGuards(CustomGuard)
   async resetPassword(@Request() req, @Body() resetPasswordDto: LoginDto) {
     return this.userService.resetPassword(req.user.id, resetPasswordDto);
+  }
+
+  @Post('refresh')
+  @UseGuards(AuthGuard('jwt-refresh'))
+  async refreshToken(@Request() req ): Promise<any> {
+    return this.authService.refreshToken(req.user.sessionId, req.user);
   }
 
   @MessagePattern({ role: 'auth', cmd: 'check' })

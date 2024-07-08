@@ -21,8 +21,10 @@ export class AuthGuard implements CanActivate {
       );
 
       const payload = await firstValueFrom(res$);
-      const user = { ...payload.user, password: undefined };
+      const sessionId = payload.sessionId;
+      const user = payload.user;
       req['user'] = user;
+      req['sessionId'] = sessionId;
 
       return true;
     } catch (error) {

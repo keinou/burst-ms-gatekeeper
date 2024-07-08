@@ -4,6 +4,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { Session } from './session/entity/session.entity';
+import { SessionModule } from './session/session.module';
 import { User } from './user/entity/user.entity';
 import { UserModule } from './user/user.module';
 
@@ -19,7 +21,7 @@ import { UserModule } from './user/user.module';
         password: configService.get<string>('DB_PASS', 'admin'),
         database: configService.get<string>('DB_DATABASE', 'burst_gatekeeper'),
         synchronize: true,
-        entities: [User]
+        entities: [User, Session]
       }),
       inject: [ConfigService]
     }),
@@ -53,7 +55,8 @@ import { UserModule } from './user/user.module';
       isGlobal: true,
     }),
     AuthModule,
-    UserModule
+    UserModule,
+    SessionModule
   ],
   controllers: [],
   providers: [],

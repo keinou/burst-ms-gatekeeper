@@ -29,6 +29,8 @@ You must configure the following environment variables:
 
 - `JWT_SECRET`: A secret key used to encrypt jwt tokens.
 - `JWT_EXPIRES`: expressed in seconds or a string describing a time span zeit/ms. Eg: 60, "2 days", "10h", "7d". Default is 2h.
+- `JWT_SECRET_REFRESH`: A secret key used to encrypt jwt refresh tokens.
+- `JWT_EXPIRES_REFRESH`: expressed in seconds or a string describing a time span zeit/ms. Eg: 60, "2 days", "10h", "7d". Default is 2h.
 
 - `SMTP_HOST`: The host of your smtp server.
 - `SMTP_PORT`: The port of your smtp server.

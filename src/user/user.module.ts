@@ -2,13 +2,14 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Session } from 'src/session/entity/session.entity';
 import { User } from './entity/user.entity';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Session]),
     ClientsModule.registerAsync({
       clients: [
         {
