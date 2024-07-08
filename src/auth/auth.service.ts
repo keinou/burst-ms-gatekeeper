@@ -34,7 +34,7 @@ export class AuthService {
 
       if (compareSync(password, user?.password)) {
         return user;
-      } 5
+      }
 
       return null;
     } catch (e) {
