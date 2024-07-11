@@ -1,6 +1,6 @@
 import { ApiResponseProperty } from "@nestjs/swagger";
 import { hash } from "bcrypt";
-import { Exclude, Expose } from "class-transformer";
+import { Exclude } from "class-transformer";
 import { IsEmail, Min } from "class-validator";
 import { Role } from "src/enums/role.enum";
 import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
@@ -19,7 +19,6 @@ export class User implements UserInterface {
 
   @Column()
   @IsEmail()
-  @Expose({ groups: ['me', 'admin'] })
   @ApiResponseProperty({
     type: String,
     example: 'foo.bar@example.com',

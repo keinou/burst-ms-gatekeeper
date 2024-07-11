@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -22,7 +22,7 @@ export class AuthController {
   @Post()
   @ApiOperation({ summary: 'Login' })
   @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 201, description: 'Login successful', type: JwtResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Login successful', type: JwtResponseDto })
   async login(@Request() req) {
     return this.authService.login(req.user);
   }
@@ -30,7 +30,8 @@ export class AuthController {
   @Post('forgot-password')
   @ApiOperation({ summary: 'Initiate password reset' })
   @ApiBody({ type: ForgotPasswordDto })
-  @ApiResponse({ status: 200, description: 'Password reset email sent' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Password reset email sent' })
+  @HttpCode(HttpStatus.NO_CONTENT)
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     await this.userService.forgotPassword(forgotPasswordDto);
   }
@@ -38,8 +39,9 @@ export class AuthController {
   @Post('reset-password')
   @ApiOperation({ summary: 'Reset password' })
   @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 200, description: 'Password reset successful' })
-  @ApiResponse({ status: 400, description: 'Invalid token or password' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Password reset successful' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid token or password' })
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(CustomGuard)
   async resetPassword(@Request() req, @Body() resetPasswordDto: LoginDto) {
     return this.userService.resetPassword(req.user.id, resetPasswordDto);
@@ -47,11 +49,17 @@ export class AuthController {
 
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh token for a session' })
-  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad Request' })
   @UseGuards(AuthGuard('jwt-refresh'))
+  @HttpCode(HttpStatus.CREATED)
   async refreshToken(@Request() req): Promise<any> {
     return this.authService.refreshToken(req.user.sessionId, req.user);
+  }
+
+  @Get('config/pub')
+  async getPublicKey() {
+    return this.authService.getPublicKey();
   }
 
   @MessagePattern({ role: 'auth', cmd: 'check' })

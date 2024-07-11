@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
 import { compareSync } from 'bcrypt';
+import * as crypto from "crypto";
 import { toMs } from 'ms-typescript';
 import { TimeoutError, catchError, firstValueFrom, timeout } from 'rxjs';
 import { Session } from 'src/session/entity/session.entity';
@@ -151,7 +152,7 @@ export class AuthService {
       },
       {
         secret: this.configService.get<string>('JWT_SECRET_REFRESH', 'super-secret'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_REFRESH', '20d'),
+        expiresIn: this.configService.get<string>('JWT_EXPIRES_REFRESH', '365d'),
       },
     );
 
@@ -160,5 +161,35 @@ export class AuthService {
       refreshToken,
       tokenExpires,
     };
+  }
+
+  async getPublicKey(): Promise<string | Buffer> {
+    const fs = require('fs');
+    const path = require('path');
+    // const crypto = require('crypto');
+
+    const certPath = this.configService.get<string>('CERT_DIR', './certs/');
+    const certFile = this.configService.get<string>('CERT_FILE', 'cert.pem');
+    const privFile = this.configService.get<string>('CERT_KEY', 'dkey.pem');
+
+    const certFull = fs.readFileSync(path.join(certPath, certFile));
+    const privFull = fs.readFileSync(path.join(certPath, privFile));
+
+    //create X509Certificate from the buffer
+    const cert = new crypto.X509Certificate(certFull);
+
+    const publicKey = cert.publicKey
+
+    return publicKey.export({ format: 'pem', type: 'spki' })
+
+    const encoder = new TextEncoder();
+    const arrayBuffer = encoder.encode('initiatorPassword').buffer;
+    const arrayBufferView = new Uint8Array(arrayBuffer);
+
+    const securityCredential = crypto.publicEncrypt(publicKey, arrayBufferView);
+    console.log(securityCredential.toString('base64'));
+
+    const privateKey = crypto.createPrivateKey(privFull);
+    console.log(crypto.privateDecrypt(privateKey, securityCredential).toString());
   }
 }

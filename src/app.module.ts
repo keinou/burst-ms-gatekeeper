@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { HealthModule } from './health/health.module';
 import { Session } from './session/entity/session.entity';
 import { SessionModule } from './session/session.module';
 import { User } from './user/entity/user.entity';
@@ -56,7 +57,8 @@ import { UserModule } from './user/user.module';
     }),
     AuthModule,
     UserModule,
-    SessionModule
+    SessionModule,
+    HealthModule
   ],
   controllers: [],
   providers: [],
