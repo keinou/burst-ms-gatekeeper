@@ -57,9 +57,10 @@ export class UserService {
       }
 
       const userEntity = this.userRepository.create(user);
-      const res = await this.userRepository.insert(userEntity);
+      const res = await this.userRepository.save(userEntity);
+      const userSaved = { ...res, password: undefined };
 
-      return res.generatedMaps[0];
+      return userSaved;
     } catch (e) {
       if (e instanceof QueryFailedError) {
         if (e.message.includes('duplicate key value violates unique constraint "email"')) {
