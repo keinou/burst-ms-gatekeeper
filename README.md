@@ -18,6 +18,8 @@ In this moment only a postgres database is supported and required.
 We encrypt the password in transit, then one certificate is necessary for this. See `CERT_*` envs.
 For this you need take de pass and encrypt with public key provided in `/auth/config/pub` and send this to backend.
 
+Cipher type is `RSA/ECB/OAEP`.
+
 To generate the certificate, here a example:
 `openssl req -x509 -newkey rsa:4096 -sha256 -keyout openssl.key -out openssl.crt -subj “/CN=devburst.io” -days 600`
 

@@ -9,6 +9,7 @@ import { UserService } from './user.service';
 
 @Module({
   imports: [
+    ConfigModule,
     TypeOrmModule.forFeature([User, Session]),
     ClientsModule.registerAsync({
       clients: [

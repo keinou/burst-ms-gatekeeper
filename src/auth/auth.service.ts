@@ -4,23 +4,29 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
 import { compareSync } from 'bcrypt';
-import * as crypto from "crypto";
 import { toMs } from 'ms-typescript';
 import { TimeoutError, catchError, firstValueFrom, timeout } from 'rxjs';
 import { Session } from 'src/session/entity/session.entity';
 import { SessionService } from 'src/session/session.service';
 import { User } from 'src/user/entity/user.entity';
+import { CryptoHelper } from 'src/utils/crypto.helper';
 
 @Injectable()
 export class AuthService {
+
+  cryptoHelper: CryptoHelper
+
   constructor(
     @Inject('AUTH_CLIENT')
     private readonly client: ClientProxy,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly sessionService: SessionService) { }
+    private readonly sessionService: SessionService
+  ) {
+    this.cryptoHelper = new CryptoHelper({ configService })
+  }
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, encryptedPassword: string): Promise<any> {
     try {
       const user$ = await this.client.send({ role: 'user', cmd: 'get' }, { email })
         .pipe(
@@ -32,6 +38,7 @@ export class AuthService {
             throw err;
           }));
       const user = await firstValueFrom(user$);
+      const password = this.cryptoHelper.decryptData(encryptedPassword);
 
       if (compareSync(password, user?.password)) {
         return user;
@@ -161,35 +168,5 @@ export class AuthService {
       refreshToken,
       tokenExpires,
     };
-  }
-
-  async getPublicKey(): Promise<string | Buffer> {
-    const fs = require('fs');
-    const path = require('path');
-    // const crypto = require('crypto');
-
-    const certPath = this.configService.get<string>('CERT_DIR', './certs/');
-    const certFile = this.configService.get<string>('CERT_FILE', 'cert.pem');
-    const privFile = this.configService.get<string>('CERT_KEY', 'dkey.pem');
-
-    const certFull = fs.readFileSync(path.join(certPath, certFile));
-    const privFull = fs.readFileSync(path.join(certPath, privFile));
-
-    //create X509Certificate from the buffer
-    const cert = new crypto.X509Certificate(certFull);
-
-    const publicKey = cert.publicKey
-
-    return publicKey.export({ format: 'pem', type: 'spki' })
-
-    const encoder = new TextEncoder();
-    const arrayBuffer = encoder.encode('initiatorPassword').buffer;
-    const arrayBufferView = new Uint8Array(arrayBuffer);
-
-    const securityCredential = crypto.publicEncrypt(publicKey, arrayBufferView);
-    console.log(securityCredential.toString('base64'));
-
-    const privateKey = crypto.createPrivateKey(privFull);
-    console.log(crypto.privateDecrypt(privateKey, securityCredential).toString());
   }
 }

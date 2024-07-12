@@ -1,19 +1,27 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import generator from 'generate-password-ts';
 import { ForgotPasswordDto } from 'src/auth/dto/forgot-password.dto';
+import { CryptoHelper } from 'src/utils/crypto.helper';
 import { PaginetedResponse } from 'src/utils/model/paginated.response.model';
 import { ObjectLiteral, QueryFailedError, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 
 @Injectable()
 export class UserService {
+
+  cryptoHelper: CryptoHelper
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly mailerService: MailerService
-  ) { }
+    private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
+  ) {
+    this.cryptoHelper = new CryptoHelper({ configService })
+  }
 
   async findAll(page, pageSize): Promise<PaginetedResponse<User>> {
     const query = this.userRepository.createQueryBuilder();
@@ -45,6 +53,7 @@ export class UserService {
 
   async create(user: Partial<User>): Promise<ObjectLiteral> {
     try {
+      user.password = this.cryptoHelper.decryptData(user.password);
       const existingUser = await this.userRepository.findOne(
         {
           where: [
@@ -74,6 +83,7 @@ export class UserService {
 
   async resetPassword(userId: string, user: Partial<User>): Promise<Partial<User>> {
     try {
+      user.password = this.cryptoHelper.decryptData(user.password);
       const resp = await this.userRepository.findOne({ where: { id: userId } });
       if (!resp) {
         throw new NotFoundException('User not found');

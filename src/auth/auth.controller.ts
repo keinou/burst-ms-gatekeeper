@@ -49,6 +49,7 @@ export class AuthController {
 
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh token for a session' })
+  @ApiBody({ type: LoginDto })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Token refreshed successfully' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad Request' })
   @UseGuards(AuthGuard('jwt-refresh'))
@@ -59,7 +60,7 @@ export class AuthController {
 
   @Get('config/pub')
   async getPublicKey() {
-    return this.authService.getPublicKey();
+    return this.authService.cryptoHelper.getPublicKey();
   }
 
   @MessagePattern({ role: 'auth', cmd: 'check' })
