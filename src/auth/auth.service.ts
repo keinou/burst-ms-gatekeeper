@@ -1,11 +1,9 @@
-import { Inject, Injectable, Logger, RequestTimeoutException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { ClientProxy } from '@nestjs/microservices';
 import { compareSync } from 'bcrypt';
 import { toMs } from 'ms-typescript';
-import { TimeoutError, catchError, firstValueFrom, timeout } from 'rxjs';
 import { Session } from 'src/session/entity/session.entity';
 import { SessionService } from 'src/session/session.service';
 import { User } from 'src/user/entity/user.entity';
