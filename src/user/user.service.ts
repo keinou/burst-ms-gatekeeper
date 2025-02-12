@@ -1,9 +1,10 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import generator from 'generate-password-ts';
 import { ForgotPasswordDto } from 'src/auth/dto/forgot-password.dto';
+import { Role } from 'src/enums/role.enum';
 import { CryptoHelper } from 'src/utils/crypto.helper';
 import { PaginetedResponse } from 'src/utils/model/paginated.response.model';
 import { ObjectLiteral, QueryFailedError, Repository } from 'typeorm';
@@ -65,6 +66,7 @@ export class UserService {
         throw new ConflictException('Email already exists');
       }
 
+      user.role = Role.Common;
       const userEntity = this.userRepository.create(user);
       const res = await this.userRepository.save(userEntity);
       const userSaved = { ...res, password: undefined };
@@ -77,7 +79,7 @@ export class UserService {
         }
       }
       Logger.error(e);
-      throw e;
+      throw new BadRequestException("Vefify the data sent");
     }
   }
 

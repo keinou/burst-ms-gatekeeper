@@ -24,6 +24,8 @@ USER node
 
 FROM node:20.11-alpine as production
 
+ENV NODE_ENV production
+
 WORKDIR /app
 
 COPY --chown=node:node --from=build /usr/src/app/package.json           ./package.json

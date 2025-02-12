@@ -9,6 +9,7 @@ import { TimeoutError, catchError, firstValueFrom, timeout } from 'rxjs';
 import { Session } from 'src/session/entity/session.entity';
 import { SessionService } from 'src/session/session.service';
 import { User } from 'src/user/entity/user.entity';
+import { UserService } from 'src/user/user.service';
 import { CryptoHelper } from 'src/utils/crypto.helper';
 
 @Injectable()
@@ -17,27 +18,17 @@ export class AuthService {
   cryptoHelper: CryptoHelper
 
   constructor(
-    @Inject('AUTH_CLIENT')
-    private readonly client: ClientProxy,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly sessionService: SessionService
+    private readonly sessionService: SessionService,
+    private readonly userService: UserService
   ) {
     this.cryptoHelper = new CryptoHelper({ configService })
   }
 
   async validateUser(email: string, encryptedPassword: string): Promise<any> {
     try {
-      const user$ = await this.client.send({ role: 'user', cmd: 'get' }, { email })
-        .pipe(
-          timeout(5000),
-          catchError(err => {
-            if (err instanceof TimeoutError) {
-              throw new RequestTimeoutException();
-            }
-            throw err;
-          }));
-      const user = await firstValueFrom(user$);
+      const user = await this.userService.findOne(email);
       const password = this.cryptoHelper.decryptData(encryptedPassword);
 
       if (compareSync(password, user?.password)) {
@@ -47,7 +38,7 @@ export class AuthService {
       return null;
     } catch (e) {
       Logger.log(e);
-      throw e;
+      throw new UnauthorizedException("Invalid credentials");
     }
   }
 
@@ -58,23 +49,28 @@ export class AuthService {
       .update(randomStringGenerator())
       .digest('hex');
 
-    const session = await this.sessionService.create({
-      user,
-      hash,
-    });
+    try {
+      const session = await this.sessionService.create({
+        user,
+        hash,
+      });
 
-    const { token, refreshToken, tokenExpires } = await this.getTokensData({
-      user: data,
-      sessionId: session.id,
-      hash,
-    });
+      const { token, refreshToken, tokenExpires } = await this.getTokensData({
+        user: data,
+        sessionId: session.id,
+        hash,
+      });
 
-    return {
-      refreshToken,
-      token,
-      tokenExpires,
-      data,
-    };
+      return {
+        refreshToken,
+        token,
+        tokenExpires,
+        data,
+      };
+    } catch (error) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
+
   }
 
   async validateToken(token) {
@@ -100,16 +96,7 @@ export class AuthService {
     if (session.hash !== data.hash)
       throw new UnauthorizedException();
 
-    const user$ = await this.client.send({ role: 'user', cmd: 'get' }, { email: data.email })
-      .pipe(
-        timeout(5000),
-        catchError(err => {
-          if (err instanceof TimeoutError) {
-            throw new RequestTimeoutException();
-          }
-          throw err;
-        }));
-    const user = await firstValueFrom(user$);
+    const user = await this.userService.findOne(data.email);
 
     if (user.id !== session.user.id)
       throw new UnauthorizedException();
@@ -132,7 +119,7 @@ export class AuthService {
   }
 
   private async getTokensData(data: {
-    user: User;
+    user: Partial<User>;
     sessionId: Session['id'];
     hash: Session['hash'];
   }) {
