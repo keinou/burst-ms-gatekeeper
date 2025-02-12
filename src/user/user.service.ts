@@ -1,15 +1,28 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { MailerService } from '@nestjs-modules/mailer';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginetedResponse } from 'src/util/model/paginated.response.model';
-import { InsertResult, Repository } from 'typeorm';
+import generator from 'generate-password-ts';
+import { ForgotPasswordDto } from 'src/auth/dto/forgot-password.dto';
+import { Role } from 'src/enums/role.enum';
+import { CryptoHelper } from 'src/utils/crypto.helper';
+import { PaginetedResponse } from 'src/utils/model/paginated.response.model';
+import { ObjectLiteral, QueryFailedError, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 
 @Injectable()
 export class UserService {
+
+  cryptoHelper: CryptoHelper
+
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
-  ) { }
+    private readonly userRepository: Repository<User>,
+    private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
+  ) {
+    this.cryptoHelper = new CryptoHelper({ configService })
+  }
 
   async findAll(page, pageSize): Promise<PaginetedResponse<User>> {
     const query = this.userRepository.createQueryBuilder();
@@ -29,39 +42,98 @@ export class UserService {
     });
   }
 
-  async findOne(username: String): Promise<Partial<User>> {
+  async findOne(email: string): Promise<Partial<User>> {
     const user = await this.userRepository
       .createQueryBuilder()
       .addSelect("User.password")
-      .where("User.username = :username", { username })
+      .where("User.email = :email", { email })
       .getOne()
 
     return user;
   }
 
-  async createUser(user: any): Promise<InsertResult> {
+  async create(user: Partial<User>): Promise<ObjectLiteral> {
     try {
+      user.password = this.cryptoHelper.decryptData(user.password);
+      const existingUser = await this.userRepository.findOne(
+        {
+          where: [
+            { email: user.email }
+          ]
+        }
+      );
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+
+      user.role = Role.Common;
       const userEntity = this.userRepository.create(user);
-      const res = await this.userRepository.insert(userEntity);
+      const res = await this.userRepository.save(userEntity);
+      const userSaved = { ...res, password: undefined };
 
-      Logger.log('createUser - Created user');
-
-      return res;
+      return userSaved;
     } catch (e) {
-      Logger.log(e);
+      if (e instanceof QueryFailedError) {
+        if (e.message.includes('duplicate key value violates unique constraint "email"')) {
+          throw new ConflictException('Email already exists');
+        }
+      }
+      Logger.error(e);
+      throw new BadRequestException("Vefify the data sent");
+    }
+  }
+
+  async resetPassword(userId: string, user: Partial<User>): Promise<Partial<User>> {
+    try {
+      user.password = this.cryptoHelper.decryptData(user.password);
+      const resp = await this.userRepository.findOne({ where: { id: userId } });
+      if (!resp) {
+        throw new NotFoundException('User not found');
+      }
+
+      resp.password = user.password;
+      const updatedUser = await this.userRepository.save(resp);
+      return { ...updatedUser, password: undefined }
+    } catch (e) {
+      Logger.error(e);
       throw e;
     }
   }
 
-  async vai() {
-    const user = new User();
-    user.name = 'admin';
-    user.email = '';
-    user.password = 'admin';
-    user.username = 'admin';
+  async forgotPassword(dto: ForgotPasswordDto): Promise<Partial<User>> {
+    try {
+      const user = await this.userRepository.findOne(
+        {
+          where: [
+            { email: dto.email }
+          ]
+        }
+      );
 
-    await this.userRepository.insert(
-      this.userRepository.create(user)
-    );
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const password = generator.generate({
+        length: 15,
+        numbers: true
+      });
+
+      user.password = password
+
+      this.mailerService
+        .sendMail({
+          to: user.email,
+          from: 'rafael@karc.io',
+          subject: 'Password Reset',
+          html: `<b>Your new password is ${password} </b>`,
+        }).catch((e) => { Logger.error(`Mailer => ${e}`) });
+
+      const updatedUser = await this.userRepository.save(user)
+      return { ...updatedUser, password: undefined }
+    } catch (e) {
+      Logger.error(e);
+      throw e;
+    }
   }
 }
