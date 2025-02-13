@@ -18,7 +18,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get<ConfigService>(ConfigService);
   const port = config.get<number>('PORT', 3000);
-  const tcpPort = config.get<number>('TCP_PORT', 5000);
+  const tcpPort = config.get<number>('GRPC_PORT', 5000);
 
   const logLevel = config.get<string>('LOG_LEVEL', 'log');
   Logger.overrideLogger(getLogLevels(logLevel));
@@ -29,7 +29,7 @@ async function bootstrap() {
     options: {
       package: 'auth',
       protoPath: protoPath,
-      url: process.env.AUTH_MICROSERVICE_URL || `localhost:${tcpPort}`,
+      url: `0.0.0.0:${tcpPort}`,
       onLoadPackageDefinition: (pkg, server) => {
         new ReflectionService(pkg).addToServer(server);
       },
