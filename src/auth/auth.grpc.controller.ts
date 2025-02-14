@@ -15,4 +15,9 @@ export class AuthGrpcController {
     const res = await this.authService.validateToken(data.jwt);
     return { isValid: !!res, sessionId: res?.sessionId || '', user: res?.user || {} };
   }
+
+  @GrpcMethod('Health', 'Check')
+  healthCheck({ service }: { service: string }) {
+    return { status: 'up' };
+  }
 }
