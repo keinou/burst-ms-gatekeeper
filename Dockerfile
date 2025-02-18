@@ -1,36 +1,52 @@
-FROM node:20-bullseye As development
-
-WORKDIR /usr/src/app
-
-COPY --chown=node:node package*.json ./
-RUN npm ci
-COPY --chown=node:node . .
-USER node
-
-FROM node:20-bullseye As build
-
-ENV NODE_ENV production
-
-WORKDIR /usr/src/app
-
-COPY --chown=node:node package*.json ./
-COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
-COPY --chown=node:node . .
-
-RUN npm run build
-RUN npm ci --only=production && npm cache clean --force
-
-USER node
-
-FROM node:20-bullseye as production
-
-ENV NODE_ENV production
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
-COPY --chown=node:node --from=build /usr/src/app/package.json           ./package.json
-COPY --chown=node:node --from=build /usr/src/app/package-lock.json      ./package-lock.json
-COPY --chown=node:node --from=build /usr/src/app/node_modules           ./node_modules
-COPY --chown=node:node --from=build /usr/src/app/dist                   ./dist
+RUN npm install -g @nestjs/cli
+
+COPY package*.json ./
+RUN npm set progress=false && \
+    npm config set fund false && \
+    npm config set audit false && \
+    npm ci
+
+COPY . .
+RUN npm run build
+RUN npm ci --only=production && npm cache clean --force
+
+RUN npm prune --production && \
+    npm cache clean --force && \
+    rm -rf /tmp/*
+
+FROM node:20-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    openssl=* \
+    ca-certificates=* && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/* /var/tmp/*
+
+WORKDIR /app
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+USER node
+
+ENV NODE_ENV production
+
+USER node
+
+LABEL org.opencontainers.image.source=https://github.com/devburst-io/burst-ms-gatekeeper \
+      org.opencontainers.image.description="Burst Microservice Gatekeeper" \
+      org.opencontainers.image.version="1.0.0"
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD node -e "try { require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1)); } catch (e) { process.exit(1); }"
+
+EXPOSE 3000
 
 ENTRYPOINT ["node", "dist/main.js"]
