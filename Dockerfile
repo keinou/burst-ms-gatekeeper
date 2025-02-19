@@ -5,6 +5,7 @@ WORKDIR /app
 RUN npm install -g @nestjs/cli
 
 COPY package*.json ./
+COPY .npmrc ./
 RUN npm set progress=false && \
     npm config set fund false && \
     npm config set audit false && \
