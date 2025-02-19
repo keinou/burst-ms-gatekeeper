@@ -1,8 +1,8 @@
+import { AuthGuard as CustomGuard } from '@devburst-io/burst-lib-commons';
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AuthGuard as CustomGuard } from 'src/guards/auth.guard';
 import { LocalAuthGuard } from 'src/guards/local-auth.guard';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';

@@ -1,10 +1,10 @@
+import { Role, UserInterface } from "@devburst-io/burst-lib-commons";
 import { ApiResponseProperty } from "@nestjs/swagger";
 import { hash } from "bcrypt";
 import { Exclude } from "class-transformer";
 import { IsEmail, Min } from "class-validator";
-import { Role } from "src/enums/role.enum";
+import { Organization } from "src/organization/entities/organization.entity";
 import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
-import { UserInterface } from "../interface/user.interface";
 
 @Entity({
   name: "user",
@@ -48,6 +48,11 @@ export class User implements UserInterface {
   @ApiResponseProperty()
   @DeleteDateColumn()
   deletedAt: Date;
+
+  @ApiResponseProperty({
+    type: [Organization]
+  })
+  organizations: Partial<Organization>[];
 
   @BeforeInsert()
   @BeforeUpdate()

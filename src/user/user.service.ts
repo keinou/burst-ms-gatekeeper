@@ -1,12 +1,11 @@
+import { CryptoHelper, PaginetedResponse, Role } from '@devburst-io/burst-lib-commons';
 import { MailerService } from '@nestjs-modules/mailer';
 import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import generator from 'generate-password-ts';
 import { ForgotPasswordDto } from 'src/auth/dto/forgot-password.dto';
-import { Role } from 'src/enums/role.enum';
-import { CryptoHelper } from 'src/utils/crypto.helper';
-import { PaginetedResponse } from 'src/utils/model/paginated.response.model';
+import { OrganizationService } from 'src/organization/organization.service';
 import { ObjectLiteral, QueryFailedError, Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 
@@ -20,6 +19,7 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
+    private readonly organizationService: OrganizationService
   ) {
     this.cryptoHelper = new CryptoHelper({ configService })
   }
@@ -48,6 +48,13 @@ export class UserService {
       .addSelect("User.password")
       .where("User.email = :email", { email })
       .getOne()
+
+    user.organizations = (await this.organizationService.getUserOrganizations(user, 1, 999)).items
+      .map(org => ({
+        id: org.id,
+        name: org.name,
+        description: org.description,
+      }));
 
     return user;
   }

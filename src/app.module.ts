@@ -1,3 +1,4 @@
+import { Proto } from '@devburst-io/burst-lib-commons';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { Module } from '@nestjs/common';
@@ -6,11 +7,13 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
+import { Organization } from './organization/entities/organization.entity';
+import { OrganizationMember } from './organization/entities/organization.member.entity';
+import { OrganizationModule } from './organization/organization.module';
 import { Session } from './session/entity/session.entity';
 import { SessionModule } from './session/session.module';
 import { User } from './user/entity/user.entity';
 import { UserModule } from './user/user.module';
-import { Constants } from './utils/constants';
 
 @Module({
   imports: [
@@ -19,11 +22,11 @@ import { Constants } from './utils/constants';
         name: 'AUTH_CLIENT',
         transport: Transport.GRPC,
         options: {
-          package: 'auth',
-          protoPath: Constants.protoPath,
+          package: ['auth', 'organization'],
+          protoPath: Proto.configFilePath,
           url: 'localhost:5000',
         },
-      },
+      }
     ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -35,7 +38,7 @@ import { Constants } from './utils/constants';
         password: configService.get<string>('DB_PASS', 'postgres'),
         database: configService.get<string>('DB_DATABASE', 'burst_gatekeeper'),
         synchronize: true,
-        entities: [User, Session]
+        entities: [User, Session, Organization, OrganizationMember]
       }),
       inject: [ConfigService]
     }),
@@ -70,6 +73,7 @@ import { Constants } from './utils/constants';
     }),
     AuthModule,
     UserModule,
+    OrganizationModule,
     SessionModule,
     HealthModule
   ],

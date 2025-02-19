@@ -1,10 +1,14 @@
+import { Proto } from "@devburst-io/burst-lib-commons";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 import { PassportModule } from "@nestjs/passport";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { join } from "path";
+import { Organization } from "src/organization/entities/organization.entity";
+import { OrganizationMember } from "src/organization/entities/organization.member.entity";
+import { OrganizationModule } from "src/organization/organization.module";
+import { OrganizationService } from "src/organization/organization.service";
 import { Session } from "src/session/entity/session.entity";
 import { SessionModule } from "src/session/session.module";
 import { SessionService } from "src/session/session.service";
@@ -16,7 +20,6 @@ import { UserService } from "src/user/user.service";
 import { AuthController } from "./auth.controller";
 import { AuthGrpcController } from "./auth.grpc.controller";
 import { AuthService } from "./auth.service";
-import { Constants } from "src/utils/constants";
 
 @Module({
   imports: [
@@ -24,7 +27,8 @@ import { Constants } from "src/utils/constants";
     ConfigModule,
     PassportModule,
     SessionModule,
-    TypeOrmModule.forFeature([User, Session]),
+    OrganizationModule,
+    TypeOrmModule.forFeature([User, Session, Organization, OrganizationMember]),
     ClientsModule.registerAsync({
       clients: [
         {
@@ -33,8 +37,8 @@ import { Constants } from "src/utils/constants";
           useFactory: async (configService: ConfigService) => ({
             transport: Transport.GRPC,
             options: {
-              package: 'auth',
-              protoPath: Constants.protoPath,
+              package: ['auth', 'organization'],
+              protoPath: Proto.configFilePath,
               url: process.env.AUTH_MICROSERVICE_URL || `localhost:${configService.get<number>('TCP_PORT', 5000)}`,
             },
           }),
@@ -61,7 +65,8 @@ import { Constants } from "src/utils/constants";
     LocalStrategy,
     JwtRefreshStrategy,
     UserService,
-    SessionService
+    SessionService,
+    OrganizationService
   ],
 })
 export class AuthModule { }

@@ -1,5 +1,5 @@
+import { Role } from '@devburst-io/burst-lib-commons';
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from 'src/enums/role.enum';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'Super User' })

@@ -1,18 +1,13 @@
+import { LoggerMiddleware, Proto } from '@devburst-io/burst-lib-commons';
 import { ReflectionService } from '@grpc/reflection';
 import { LogLevel, Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { join } from 'path';
 import { AppModule } from './app.module';
-import { LoggerMiddleware } from './middlewares/logger.middleware';
 
 declare const module: any;
-
-const protoPath = process.env.NODE_ENV === 'production'
-  ? join(__dirname, './proto/auth.proto')
-  : join(__dirname, '../src/proto/auth.proto');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,8 +22,8 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,
     options: {
-      package: 'auth',
-      protoPath: protoPath,
+      package: ['auth', 'organization'],
+      protoPath: Proto.configFilePath,
       url: `0.0.0.0:${tcpPort}`,
       onLoadPackageDefinition: (pkg, server) => {
         new ReflectionService(pkg).addToServer(server);

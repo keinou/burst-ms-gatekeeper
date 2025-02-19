@@ -1,3 +1,4 @@
+import { CryptoHelper } from '@devburst-io/burst-lib-commons';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import { ConfigService } from '@nestjs/config';
@@ -8,7 +9,6 @@ import { Session } from 'src/session/entity/session.entity';
 import { SessionService } from 'src/session/session.service';
 import { User } from 'src/user/entity/user.entity';
 import { UserService } from 'src/user/user.service';
-import { CryptoHelper } from 'src/utils/crypto.helper';
 
 @Injectable()
 export class AuthService {
