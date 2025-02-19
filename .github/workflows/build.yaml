@@ -26,6 +26,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@devburst-io'
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
